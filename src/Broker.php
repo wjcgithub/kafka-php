@@ -134,12 +134,12 @@ class Broker
         return $this->brokers;
     }
 
-    public function getMetaConnect(string $key, bool $modeSync = false): ?CommonSocket
+    public function getMetaConnect(string $key, bool $modeSync = false)
     {
         return $this->getConnect($key, 'metaSockets', $modeSync);
     }
 
-    public function getRandConnect(bool $modeSync = false): ?CommonSocket
+    public function getRandConnect(bool $modeSync = false)
     {
         $nodeIds = array_keys($this->brokers);
         shuffle($nodeIds);
@@ -151,12 +151,12 @@ class Broker
         return $this->getMetaConnect((string) $nodeIds[0], $modeSync);
     }
 
-    public function getDataConnect(string $key, bool $modeSync = false): ?CommonSocket
+    public function getDataConnect(string $key, bool $modeSync = false)
     {
         return $this->getConnect($key, 'dataSockets', $modeSync);
     }
 
-    public function getConnect(string $key, string $type, bool $modeSync = false): ?CommonSocket
+    public function getConnect(string $key, string $type, bool $modeSync = false): SocketCoroutine
     {
         if (isset($this->{$type}[$key])) {
             return $this->{$type}[$key];
@@ -187,15 +187,12 @@ class Broker
         }
 
         try {
+            /**
+             * @var SocketCoroutine $socket
+             */
             $socket = $this->getSocket((string) $host, (int) $port, $modeSync);
-
-            if ($socket instanceof Socket && $this->process !== null) {
-                $socket->setOnReadable($this->process);
-            }
-
             $socket->connect();
             $this->{$type}[$key] = $socket;
-
             return $socket;
         } catch (\Throwable $e) {
             $this->error($e->getMessage());
@@ -217,12 +214,13 @@ class Broker
     /**
      * @throws \Kafka\Exception
      */
-    public function getSocket(string $host, int $port, bool $modeSync): CommonSocket
+    public function getSocket(string $host, int $port, bool $modeSync): SwooleSocket
     {
         $saslProvider = $this->judgeConnectionConfig();
 
         if ($modeSync) {
-            return new SocketSync($host, $port, $this->config, $saslProvider);
+//            return new SocketSync($host, $port, $this->config, $saslProvider);
+            return new SocketCoroutine($host, $port, $this->config, $saslProvider);
         }
 
         return new Socket($host, $port, $this->config, $saslProvider);

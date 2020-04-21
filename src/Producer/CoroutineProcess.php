@@ -17,7 +17,7 @@ use function shuffle;
 use function substr;
 use function trim;
 
-class SyncProcess
+class CoroutineProcess
 {
     use LoggerAwareTrait;
     use LoggerTrait;
@@ -101,11 +101,7 @@ class SyncProcess
     {
         $this->debug('Start sync metadata request');
 
-        /**
-         * @var ProducerConfig $configObj
-         */
-        $configObj = ProducerConfig::getInstance();
-        $brokerList = $configObj->getMetadataBrokerList();
+        $brokerList = ProducerConfig::getInstance()->getMetadataBrokerList();
         $brokerHost = [];
 
         foreach (explode(',', $brokerList) as $key => $val) {

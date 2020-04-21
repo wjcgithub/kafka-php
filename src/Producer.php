@@ -38,9 +38,9 @@ class Producer
         }
 
         if (is_array($data)) {
-            return $this->sendSynchronously($data);
+            $ret = $this->sendSynchronously($data);
+            return $ret;
         }
-
         $this->sendAsynchronously($data);
 
         return null;

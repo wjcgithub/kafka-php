@@ -1,21 +1,26 @@
 <?php
-
 declare(strict_types=1);
-// \Swoole\Runtime::enableCoroutine(SWOOLE_HOOK_ALL);
+ \Swoole\Runtime::enableCoroutine(SWOOLE_HOOK_ALL);
 require '../vendor/autoload.php';
 date_default_timezone_set('PRC');
 
-use Infection\Process\Runner\Result;
 use Kafka\Producer;
 use Kafka\ProducerConfig;
 use Monolog\Handler\StdoutHandler;
 use Monolog\Logger;
+use Swoole\Coroutine;
 
+echo 111;
 
-\Swoole\Coroutine::create(function () {
+Swoole\Coroutine\run(function () {
+// Create the logger
     $logger = new Logger('my_logger');
+// Now add some handlers
     $logger->pushHandler(new StdoutHandler());
 
+    /**
+     * @var ProducerConfig $config
+     */
     $config = ProducerConfig::getInstance();
     $config->setMetadataRefreshIntervalMs(10000);
     $config->setMetadataBrokerList('192.168.0.102:9092');
@@ -25,11 +30,11 @@ use Monolog\Logger;
     $config->setProduceInterval(500);
 
     $producer = new Producer();
-//    $producer->setLogger($logger);
+    // $producer->setLogger($logger);
 
-    for ($i = 0; $i < 5; $i++) {
-        \Swoole\Coroutine::create(function () use($producer) {
-            echo "start\r\n";
+    for ($i = 0; $i < 1; $i++) {
+        Coroutine::create(function () use($producer) {
+            echo "start \r\n";
             $result = $producer->send([
                 [
                     'topic' => 'test',
@@ -37,10 +42,9 @@ use Monolog\Logger;
                     'key' => '',
                 ],
             ]);
-            echo "recv\r\n";
+            echo "ok \r\n";
 //            print_r($result);
         });
-        echo "end\r\n";
+        echo "start========$i=======\r\n";
     }
-
 });

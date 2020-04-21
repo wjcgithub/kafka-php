@@ -3,6 +3,7 @@
 .idea
 .project
 .settings/
+.vscode/
 .*.sw*
 .*.un~
 build/
