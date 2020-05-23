@@ -14,6 +14,7 @@ $logger = new Logger('my_logger');
 // Now add some handlers
 $logger->pushHandler(new StdoutHandler());
 
+/** @var ConsumerConfig $config */
 $config = ConsumerConfig::getInstance();
 $config->setMetadataRefreshIntervalMs(10000);
 $config->setMetadataBrokerList('192.168.0.102:9092');

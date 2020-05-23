@@ -4,6 +4,7 @@ declare(strict_types=1);
 namespace Kafka;
 
 use Amp\Loop;
+use Kafka\Producer\CoroutineProcess;
 use Kafka\Producer\Process;
 use Kafka\Producer\SyncProcess;
 use Psr\Log\LoggerAwareTrait;
@@ -21,7 +22,7 @@ class Producer
 
     public function __construct(?callable $producer = null)
     {
-        $this->process = $producer === null ? new SyncProcess() : new Process($producer);
+        $this->process = new CoroutineProcess();
     }
 
     /**
@@ -33,49 +34,12 @@ class Producer
      */
     public function send($data = true): ?array
     {
-        if ($this->logger) {
-            $this->process->setLogger($this->logger);
-        }
-
+        $ret = null;
         if (is_array($data)) {
-            $ret = $this->sendSynchronously($data);
-            return $ret;
-        }
-        $this->sendAsynchronously($data);
-
-        return null;
-    }
-
-    /**
-     * @param mixed[] $data
-     *
-     * @return mixed[]
-     *
-     * @throws \Kafka\Exception
-     */
-    private function sendSynchronously(array $data): array
-    {
-        if (! $this->process instanceof SyncProcess) {
-            throw new Exception('An asynchronous process is not able to send messages synchronously');
+            $ret = $this->process->send($data);
         }
 
-        return $this->process->send($data);
-    }
-
-    /**
-     * @throws \Kafka\Exception
-     */
-    private function sendAsynchronously(bool $startLoop): void
-    {
-        if ($this->process instanceof SyncProcess) {
-            throw new Exception('A synchronous process is not able to send messages asynchronously');
-        }
-
-        $this->process->start();
-
-        if ($startLoop) {
-            Loop::run();
-        }
+        return $ret;
     }
 
     public function syncMeta(): void

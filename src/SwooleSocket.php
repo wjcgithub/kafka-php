@@ -159,7 +159,7 @@ class SwooleSocket
             throw new Exception('Cannot open without port.');
         }
 
-        $socket = new \Swoole\Coroutine\Socket(AF_INET, SOCK_STREAM, 0);
+        $socket = new \Swoole\Coroutine\Socket(AF_INET, SOCK_STREAM, IPPROTO_IP);
 
         if ($this->config !== null && $this->config->getSslEnable()) { // ssl connection
             $socket->setProtocol([
@@ -168,12 +168,10 @@ class SwooleSocket
                 'ssl_key_file' => $this->config->getSslPassphrase()
             ]);
         }
-        $rest = $socket->connect($this->host, $this->port, $this->getConnectTimeout());
-        $this->stream = $socket;
-        if (!$rest) {
-            throw new Exception(
-                sprintf('Could not connect to %s:%d (%s [%d])', $this->host, $this->port, $this->stream->errMsg, $this->stream->errCode)
-            );
+        if (!$socket->connect($this->host, $this->port, $this->getConnectTimeout())) {
+            $this->ioException();
+        } else {
+            $this->stream = $socket;
         }
 
         // SASL auth
@@ -203,7 +201,8 @@ class SwooleSocket
         if ($length > self::READ_MAX_LENGTH) {
             throw Exception\Socket::invalidLength($length, self::READ_MAX_LENGTH);
         }
-        $data = $this->stream->recvAll($length, $this->getReadTimeout());
+//        $data = $this->stream->recvAll($length, $this->getReadTimeout());
+        $data = $this->stream->recvAll($length);
         if ($data === false) {
             throw new Exception(
                 sprintf('Read msg error %s:%d (%s [%d])', $this->host, $this->port, $this->stream->errMsg, $this->stream->errCode)
@@ -227,6 +226,23 @@ class SwooleSocket
 
         $hasWriteLen = $this->stream->sendAll($buffer, $this->getWriteTimeout());
 
+        if($hasWriteLen !== $bytesToWrite) {
+            $this->ioException();
+        }
+
         return $hasWriteLen;
+    }
+
+    protected function ioException(?int $errno = null): void
+    {
+        $socket = $this->stream;
+        $errmsg = sprintf('Could not connect to %s:%d (%s [%d])', $this->host, $this->port, $this->stream->errMsg, $this->stream->errCode);
+        if ($errno !== null) {
+            $socket->errCode = $errno;
+            $socket->errMsg = $errmsg.swoole_strerror($errno);
+        }
+        $socket->close();
+        $this->stream = null;
+        throw new Exception($socket->errMsg, $socket->errCode);
     }
 }

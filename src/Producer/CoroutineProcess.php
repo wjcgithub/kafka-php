@@ -8,6 +8,8 @@ use Kafka\Exception;
 use Kafka\LoggerTrait;
 use Kafka\ProducerConfig;
 use Kafka\Protocol\Protocol;
+use Monolog\Handler\StdoutHandler;
+use Monolog\Logger;
 use Psr\Log\LoggerAwareTrait;
 use function array_keys;
 use function count;
@@ -27,6 +29,9 @@ class CoroutineProcess
 
     public function __construct(?RecordValidator $recordValidator = null)
     {
+        $logger = new Logger('coroutine_process');
+        $logger->pushHandler(new StdoutHandler());
+        $this->setLogger($logger);
         $this->recordValidator = $recordValidator ?? new RecordValidator();
 
         $config = $this->getConfig();
@@ -195,7 +200,10 @@ class CoroutineProcess
 
     private function getBroker(): Broker
     {
-        return Broker::getInstance();
+        /** @var Broker $broker */
+        $broker = Broker::getInstance();
+        $broker->setLogger($this->logger);
+        return $broker;
     }
 
     private function getConfig(): ProducerConfig

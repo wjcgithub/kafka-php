@@ -195,6 +195,7 @@ class Broker
             $this->{$type}[$key] = $socket;
             return $socket;
         } catch (\Throwable $e) {
+            $this->debug($e->getMessage());
             $this->error($e->getMessage());
             return null;
         }

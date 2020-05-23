@@ -10,46 +10,41 @@ use Monolog\Handler\StdoutHandler;
 use Monolog\Logger;
 use Swoole\Coroutine;
 
+echo 111;
+
 Swoole\Coroutine\run(function () {
-//    startXhprof();
 // Create the logger
     $logger = new Logger('my_logger');
 // Now add some handlers
     $logger->pushHandler(new StdoutHandler());
+
     /**
      * @var ProducerConfig $config
      */
     $config = ProducerConfig::getInstance();
     $config->setMetadataRefreshIntervalMs(10000);
-    $config->setMetadataBrokerList('10.90.71.159:9092');
+    $config->setMetadataBrokerList('192.168.0.102:9092');
     $config->setBrokerVersion('0.10.2.1');
     $config->setRequiredAck(1);
     $config->setIsAsyn(true);
     $config->setProduceInterval(500);
-    $config->setTimeout(5);
-    $config->setMetadataRequestTimeoutMs(2000);
 
     $producer = new Producer();
-    $producer->setLogger($logger);
+    // $producer->setLogger($logger);
 
-    $succ = [];
-    for ($i = 0; $i < 5; $i++) {
-        Coroutine::create(function () use($producer, $i, &$succ) {
+    for ($i = 0; $i < 1; $i++) {
+        Coroutine::create(function () use($producer) {
             echo "start \r\n";
             $result = $producer->send([
                 [
-                    'topic' => 'wjc_kafka_coroutine_test',
+                    'topic' => 'test',
                     'value' => 'test1....message.',
                     'key' => '',
-                ]
+                ],
             ]);
-            print_r($result);
-            $succ[$i] = $i;
-            echo "$i ok, current ".count($succ)." \r\n";
+            echo "ok \r\n";
+//            print_r($result);
         });
         echo "start========$i=======\r\n";
     }
-
-    \Swoole\Event::wait();
-//     endXhprof();
 });

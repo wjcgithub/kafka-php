@@ -18,29 +18,24 @@ use Monolog\Logger;
 
     $config = ProducerConfig::getInstance();
     $config->setMetadataRefreshIntervalMs(10000);
-    $config->setMetadataBrokerList('192.168.0.102:9092');
+    $config->setMetadataBrokerList('10.90.71.159:9092');
     $config->setBrokerVersion('0.10.2.1');
     $config->setRequiredAck(1);
     $config->setIsAsyn(true);
     $config->setProduceInterval(500);
 
     $producer = new Producer();
-//    $producer->setLogger($logger);
-
-    for ($i = 0; $i < 5; $i++) {
-        \Swoole\Coroutine::create(function () use($producer) {
-            echo "start\r\n";
-            $result = $producer->send([
-                [
-                    'topic' => 'test',
-                    'value' => 'test1....message.',
-                    'key' => '',
-                ],
-            ]);
-            echo "recv\r\n";
-//            print_r($result);
-        });
-        echo "end\r\n";
+    $producer->setLogger($logger);
+    for ($i = 0; $i < 1000; $i++) {
+        echo "$i start\r\n";
+        $result = $producer->send([
+            [
+                'topic' => 'wjc_kafka_coroutine_test',
+                'value' => 'test1....message.',
+                'key' => '',
+            ],
+        ]);
+        echo "$i end\r\n";
     }
 
 });
