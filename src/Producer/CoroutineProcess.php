@@ -193,6 +193,7 @@ class CoroutineProcess
             $topicData['partitions'][$partId]      = $partition;
             $topicData['topic_name']               = $record['topic'];
             $sendData[$brokerId][$record['topic']] = $topicData;
+            $this->debug("send data". json_encode($sendData));
         }
 
         return $sendData;

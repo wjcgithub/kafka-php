@@ -33,7 +33,7 @@ Swoole\Coroutine\run(function () {
     $producer->setLogger($logger);
 
     $succ = [];
-    for ($i = 0; $i < 5; $i++) {
+    for ($i = 0; $i < 1; $i++) {
         Coroutine::create(function () use($producer, $i, &$succ) {
             echo "start \r\n";
             $result = $producer->send([
@@ -43,7 +43,7 @@ Swoole\Coroutine\run(function () {
                     'key' => '',
                 ]
             ]);
-            print_r($result);
+            // print_r($result);
             $succ[$i] = $i;
             echo "$i ok, current ".count($succ)." \r\n";
         });
